@@ -379,8 +379,7 @@ class TestRobotClient:
             client = await RobotClient.with_channel(channel, RobotClient.Options())
             client._resource_names.append(ResourceName(namespace=RESOURCE_NAMESPACE_RDK, type="service", subtype="motion", name="motion1"))
             with pytest.raises(ResourceNotFoundError):
-                MotionClient.from_robot(client)
-            MotionClient.from_robot(client, "motion1")
+                MotionClient.from_robot(client, "motion1")
             await client.close()
 
     @pytest.mark.asyncio
