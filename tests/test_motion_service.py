@@ -5,7 +5,8 @@ from viam.components.arm import Arm
 from viam.components.gantry import Gantry
 from viam.proto.common import GeoObstacle, GeoPoint, Pose, PoseInFrame, ResourceName
 from viam.proto.service.motion import Constraints, LinearConstraint
-from viam.services.motion import MotionClient
+from viam.resource.manager import ResourceManager
+from viam.services.motion import MotionClient, MotionRPCService
 
 from . import loose_approx
 from .mocks.services import MockMotion
@@ -28,6 +29,24 @@ def service() -> MockMotion:
         move_single_component_responses=MOVE_SINGLE_COMPONENT_RESPONSES,
         get_pose_responses=GET_POSE_RESPONSES,
     )
+
+
+class TestService:
+    @classmethod
+    def setup_class(cls, service):
+        cls.name = "navigation"
+        cls.motion = service
+        cls.manager = ResourceManager([cls.motion])
+        cls.service = MotionRPCService(cls.manager)
+
+    @pytest.mark.asyncio
+    async def test_move_on_globe(self):
+        async with ChannelFor([self.service]) as channel:
+            client = MotionServiceStub(channel)
+            request = MoveOnGlobeRequest(name=self.name)
+            response: MoveOnGlobeResponse = await client.MoveOnGlobe(request)
+            result = response.success
+            assert result == True
 
 
 class TestClient:
