@@ -1,7 +1,20 @@
 from grpclib.server import Stream
 
+from viam.errors import MethodNotImplementedError
 from viam.proto.common import DoCommandRequest, DoCommandResponse
-from viam.proto.service.motion import MotionServiceBase, MoveOnGlobeRequest, MoveOnGlobeResponse
+from viam.proto.service.motion import (
+    GetPoseRequest,
+    GetPoseResponse,
+    MotionServiceBase,
+    MoveOnGlobeRequest,
+    MoveOnGlobeResponse,
+    MoveOnMapRequest,
+    MoveOnMapResponse,
+    MoveRequest,
+    MoveResponse,
+    MoveSingleComponentRequest,
+    MoveSingleComponentResponse,
+)
 from viam.resource.rpc_service_base import ResourceRPCServiceBase
 from viam.utils import dict_to_struct, struct_to_dict
 
@@ -36,21 +49,23 @@ class MotionRPCService(MotionServiceBase, ResourceRPCServiceBase):
         response = MoveOnGlobeResponse(success=success)
         await stream.send_message(response)
 
-    # async def Move(self, stream: 'grpclib.server.Stream[service.motion.v1.motion_pb2.MoveRequest, service.motion.v1.motion_pb2.MoveResponse]') -> None:
-    #     pass
-    #
-    # @abc.abstractmethod
-    # async def MoveOnMap(self, stream: 'grpclib.server.Stream[service.motion.v1.motion_pb2.MoveOnMapRequest, service.motion.v1.motion_pb2.MoveOnMapResponse]') -> None:
-    #     pass
-    #
-    # @abc.abstractmethod
-    # async def MoveSingleComponent(self, stream: 'grpclib.server.Stream[service.motion.v1.motion_pb2.MoveSingleComponentRequest, service.motion.v1.motion_pb2.MoveSingleComponentResponse]') -> None:
-    #     pass
-    #
-    # @abc.abstractmethod
-    # async def GetPose(self, stream: 'grpclib.server.Stream[service.motion.v1.motion_pb2.GetPoseRequest, service.motion.v1.motion_pb2.GetPoseResponse]') -> None:
-    #     pass
-    #
-    # @abc.abstractmethod
-    # async def DoCommand(self, stream: 'grpclib.server.Stream[common.v1.common_pb2.DoCommandRequest, common.v1.common_pb2.DoCommandResponse]') -> None:
-    #     pass
+    async def Move(self, stream: Stream[MoveRequest, MoveResponse]) -> None:
+        raise MethodNotImplementedError("Move").grpc_error
+
+    async def MoveOnMap(self, stream: Stream[MoveOnMapRequest, MoveOnMapResponse]) -> None:
+        raise MethodNotImplementedError("MoveOnMap").grpc_error
+
+    async def MoveSingleComponent(self, stream: Stream[MoveSingleComponentRequest, MoveSingleComponentResponse]) -> None:
+        raise MethodNotImplementedError("MoveSingleComponent").grpc_error
+
+    async def GetPose(self, stream: Stream[GetPoseRequest, GetPoseResponse]) -> None:
+        raise MethodNotImplementedError("GetPose").grpc_error
+
+    async def DoCommand(self, stream: Stream[DoCommandRequest, DoCommandResponse]) -> None:
+        request = await stream.recv_message()
+        assert request is not None
+        motion = self.get_resource(request.name)
+        timeout = stream.deadline.time_remaining() if stream.deadline else None
+        result = await motion.do_command(command=struct_to_dict(request.command), timeout=timeout, metadata=stream.metadata)
+        response = DoCommandResponse(result=dict_to_struct(result))
+        await stream.send_message(response)
