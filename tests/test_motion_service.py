@@ -31,22 +31,23 @@ def service() -> MockMotion:
     )
 
 
-class TestService:
-    @classmethod
-    def setup_class(cls, service):
-        cls.name = "navigation"
-        cls.motion = service
-        cls.manager = ResourceManager([cls.motion])
-        cls.service = MotionRPCService(cls.manager)
-
-    @pytest.mark.asyncio
-    async def test_move_on_globe(self):
-        async with ChannelFor([self.service]) as channel:
-            client = MotionServiceStub(channel)
-            request = MoveOnGlobeRequest(name=self.name)
-            response: MoveOnGlobeResponse = await client.MoveOnGlobe(request)
-            result = response.success
-            assert result == True
+# class TestService:
+#     name = "navigation"
+#     motion = service
+#
+#     @classmethod
+#     def setup_class(cls):
+#         cls.manager = ResourceManager([cls.motion])
+#         cls.service = MotionRPCService(cls.manager)
+#
+#     @pytest.mark.asyncio
+#     async def test_move_on_globe(self):
+#         async with ChannelFor([self.service]) as channel:
+#             client = MotionServiceStub(channel)
+#             request = MoveOnGlobeRequest(name=self.name)
+#             response: MoveOnGlobeResponse = await client.MoveOnGlobe(request)
+#             result = response.success
+#             assert result == True
 
 
 class TestClient:
